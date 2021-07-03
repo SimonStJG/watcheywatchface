@@ -4,7 +4,13 @@ set -euo pipefail
 
 WATCH_REGEX='todo$'
 
-echo "Watching ${$(readlink -f .)}"
+echo "Watching ${$(pwd)}"
+
+on_err() {
+    echo "ERR on line $1" 1>&2
+}
+
+trap 'on_err $LINENO' ERR
 
 if ! type inotifywait > /dev/null; then
   echo "inotifywait required, e.g. debian package inotify-tools" 1>&2
@@ -20,13 +26,14 @@ while IFS= read -r line; do
   # Avoid shenanigans with text editors which create a file and then write to it afterwards
   sleep .1
 
-  FILENAME=$(echo $line | awk -F',' '{print $3}')
-  if ! echo "$FILENAME" | grep "$WATCH_REGEX" > /dev/null; then
+  FILENAME=$(cut -d ' ' -f 2- <<< $line)
+  if ! grep "$WATCH_REGEX" <<< "$FILENAME" > /dev/null; then
     # File doesn't match regex
     continue
   fi
 
-  if git diff --exit-code --quiet "$FILENAME" && git ls-files --error-unmatch "$FILENAME"; then
+  if git diff --exit-code --quiet "$FILENAME" && \
+       git ls-files --error-unmatch "$FILENAME" > /dev/null; then
     # File is already tracked and has no changes
     continue
   fi
@@ -43,4 +50,4 @@ while IFS= read -r line; do
     echo "git commit failed" 1>&2
   fi
 
-done < <(inotifywait --quiet --csv -e modify,create,delete . -m)
+done < <(inotifywait --quiet --format '%e %f' -e modify,create,delete . -m)
