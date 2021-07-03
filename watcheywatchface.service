@@ -1,0 +1,11 @@
+[Unit]
+Description=watcheywatchface
+
+[Service]
+ExecStart=/home/simon/code/watcheywatchface/watcheywatchface.sh
+WorkingDirectory=/home/simon/code/todo-test/
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=default.target
