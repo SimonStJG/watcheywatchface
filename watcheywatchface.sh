@@ -21,20 +21,20 @@ while IFS= read -r line; do
   sleep .1
 
   FILENAME=$(echo $line | awk -F',' '{print $3}')
-  if ! echo $FILENAME | grep $WATCH_REGEX > /dev/null; then
+  if ! echo "$FILENAME" | grep "$WATCH_REGEX" > /dev/null; then
     # File doesn't match regex
     continue
   fi
 
-  if git diff --exit-code --quiet $FILENAME && git ls-files --error-unmatch $FILENAME; then
+  if git diff --exit-code --quiet "$FILENAME" && git ls-files --error-unmatch "$FILENAME"; then
     # File is already tracked and has no changes
     continue
   fi
 
   MESSAGE="watcheywatchface saw ${line}"
-  echo $MESSAGE
+  echo "$MESSAGE"
 
-  if ! git add $FILENAME; then
+  if ! git add "$FILENAME"; then
     echo "git add failed" 1>&2
     continue
   fi
